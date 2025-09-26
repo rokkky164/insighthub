@@ -28,7 +28,6 @@ class Department(GenericModel):
         blank=True,
         related_name="headed_departments"
     )
-    created_at = DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.name} - {self.business.name}"

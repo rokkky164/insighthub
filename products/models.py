@@ -36,9 +36,15 @@ class Product(GenericModel):
         related_name="products"
     )
     name = CharField(max_length=255)
-    sku = CharField(max_length=50, unique=True)
+    sku = CharField(max_length=50)
     description = TextField(blank=True, null=True)
     price = DecimalField(max_digits=12, decimal_places=2)
+    stock = IntegerField(default=0)
+    low_stock_alert = IntegerField(default=0)
+    is_active = BooleanField(default=True)
+
+    class Meta:
+        unique_together = ('business', 'sku')
 
     def __str__(self):
         return f"{self.name} - {self.sku}"
