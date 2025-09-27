@@ -3,9 +3,7 @@ from django.db.models import (
     TextChoices,
     CharField,
     ForeignKey,
-    DateTimeField,
     CASCADE,
-    SET_NULL,
 )
 
 from django.db.models.signals import post_save, post_delete
@@ -41,7 +39,6 @@ class Business(GenericModel):
     name = CharField(max_length=255)
     industry = CharField(max_length=100, blank=True, null=True)
     subscription_plan = CharField(max_length=50, default="Free")
-    created_at = DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.name
@@ -56,8 +53,6 @@ class UserBusiness(GenericModel):
     user = ForeignKey(User, on_delete=CASCADE, related_name="business_roles")
     business = ForeignKey(Business, on_delete=CASCADE, related_name="users")
     role = CharField(max_length=20, choices=User.Role.choices)
-
-    created_at = DateTimeField(auto_now_add=True)
 
     class Meta:
         unique_together = ("user", "business")

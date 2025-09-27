@@ -1,11 +1,9 @@
 from django.core.cache import cache
-
-from rest_framework import viewsets, mixins
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.response import Response
 from rest_framework_tracking.mixins import LoggingMixin
-from rest_framework import generics, status, filters
-
+from rest_framework import generics, status, viewsets, mixins
+from rest_framework.response import Response
+# App Imports
 from common.exception import InsightHubException
 from common.pagination import StandardResultsSetPagination
 from .models import User, Business, UserBusiness
@@ -14,6 +12,7 @@ from .serializers import (
     BusinessSerializer,
     UserBusinessSerializer,
     AuthenticateSerializer,
+    SignupSerializer
 )
 from .filters import UserFilter, BusinessFilter, UserBusinessFilter
 from .permissions import IsBusinessUser
@@ -22,11 +21,6 @@ from .constants import (
     BUSINESS_LIST_CACHE_KEY,
     BUSINESS_LIST_CACHE_TIMEOUT,
 )
-
-from rest_framework import viewsets, status
-from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
-from .serializers import SignupSerializer
 
 
 class SignupViewSet(viewsets.GenericViewSet):
