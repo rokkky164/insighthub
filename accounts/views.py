@@ -1,35 +1,60 @@
 from django.core.cache import cache
 
 from rest_framework import viewsets, mixins
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from rest_framework_tracking.mixins import LoggingMixin
+from rest_framework import generics, status, filters
 
+from common.exception import InsightHubException
 from common.pagination import StandardResultsSetPagination
 from .models import User, Business, UserBusiness
-from .serializers import UserSerializer, BusinessSerializer, UserBusinessSerializer
+from .serializers import UserSerializer, BusinessSerializer, UserBusinessSerializer, AuthenticateSerializer
 from .filters import UserFilter, BusinessFilter, UserBusinessFilter
 from .permissions import IsBusinessUser
-from .constants import BUSINESS_LIST_CACHE_KEY, BUSINESS_LIST_CACHE_TIMEOUT
+from .constants import AuthenticateType, BUSINESS_LIST_CACHE_KEY, BUSINESS_LIST_CACHE_TIMEOUT
+
+from rest_framework import viewsets, status
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
+from .serializers import SignupSerializer
+
+
+class SignupViewSet(viewsets.GenericViewSet):
+    queryset = User.objects.all()
+    serializer_class = SignupSerializer
+    permission_classes = [AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+
+        if serializer.is_valid():
+            user = serializer.save()
+            return Response({
+                "message": "User created successfully.",
+                "user_id": user.id,
+                "email": user.email
+            }, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class AuthenticateAPIView(LoggingMixin, generics.GenericAPIView):
-    permission_classes = [
-        AllowAny,
-    ]
+    permission_classes = [AllowAny]
     serializer_class = AuthenticateSerializer
 
     def post(self, request, format=None):
         serializer = self.get_serializer(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
-        except Exception as e:
+        except Exception as err:
             if type(e) is ValueError:
-                raise StandardAPIException(
+                raise InsightHubException(
                     code=e.args[0],
                     detail=ERROR_DETAILS[e.args[0]],
                     status_code=status.HTTP_400_BAD_REQUEST,
                 )
-            raise e
+            raise err
 
         return Response(serializer.validated_data, status=status.HTTP_200_OK)
 
@@ -38,6 +63,8 @@ class LoginView(AuthenticateAPIView):
     def post(self, request, format=None):
         request.data["type"] = AuthenticateType.login_with_password.value
         return super().post(request, format)
+    
+
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
