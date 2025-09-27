@@ -6,7 +6,8 @@ from django.db.models import (
     OneToOneField,
     CASCADE,
     SET_NULL,
-    BooleanField
+    BooleanField,
+    DecimalField
 )
 from accounts.models import Business, User
 
@@ -36,19 +37,15 @@ class Department(GenericModel):
 
 
 class BusinessSettings(GenericModel):
-    """
-    Configurable settings for each business.
-    (currency, timezone, analytics preferences, etc.)
-    """
-    business = OneToOneField(
-        Business,
-        on_delete=CASCADE,
-        related_name="settings"
-    )
+    business = OneToOneField(Business, on_delete=CASCADE, related_name="settings")
     currency = CharField(max_length=10, default="USD")
     timezone = CharField(max_length=50, default="UTC")
     language = CharField(max_length=20, default="en")
     enable_notifications = BooleanField(default=True)
+
+    # Add tax config fields here or link to a TaxConfig model
+    tax_name = CharField(max_length=100, default="GST")
+    tax_percentage = DecimalField(max_digits=5, decimal_places=2, default=0.0)
 
     def __str__(self):
         return f"Settings for {self.business.name}"
@@ -70,3 +67,12 @@ class BusinessPlanHistory(GenericModel):
 
     def __str__(self):
         return f"{self.business.name} - {self.plan_name}"
+
+
+class PaymentMethod(GenericModel):
+    business = ForeignKey(Business, on_delete=CASCADE, related_name="payment_methods")
+    method_name = CharField(max_length=50)
+    active = BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.method_name} ({'Active' if self.active else 'Inactive'})"
