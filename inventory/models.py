@@ -1,11 +1,12 @@
 from django.db.models import (
     ForeignKey,
-    CharField,
-    DateField,
     DateTimeField,
-    OneToOneField,
-    CASCADE
-)from core.models import GenericModel
+    CASCADE,
+    SET_NULL,
+    DecimalField,
+    PositiveIntegerField
+)
+from common.models import GenericModel
 from accounts.models import Business
 from customers.models import Customer
 from products.models import Product

@@ -1,11 +1,7 @@
 from django.db.models import (
     ForeignKey,
     CharField,
-    DateField,
-    DateTimeField,
-    OneToOneField,
     CASCADE,
-    ImageField,
     Index,
     TextField,
     SET_NULL,

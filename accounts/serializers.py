@@ -8,15 +8,6 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'role']
 
 
-class UserBusinessSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
-    business = BusinessSerializer(read_only=True)
-
-    class Meta:
-        model = UserBusiness
-        fields = ['id', 'user', 'business', 'role', 'created_at']
-
-
 class UserBusinessSimpleSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
 
@@ -31,3 +22,13 @@ class BusinessSerializer(serializers.ModelSerializer):
     class Meta:
         model = Business
         fields = ['id', 'name', 'industry', 'subscription_plan', 'users']
+
+
+class UserBusinessSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    business = BusinessSerializer(read_only=True)
+
+    class Meta:
+        model = UserBusiness
+        fields = ['id', 'user', 'business', 'role', 'created_at']
+

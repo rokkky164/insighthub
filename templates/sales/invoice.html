@@ -1,0 +1,13 @@
+<html>
+  <body>
+    <h2>Invoice #{{ sale.id }}</h2>
+    <p>Customer: {{ sale.customer.name }}</p>
+    <p>Date: {{ sale.sale_date }}</p>
+    <p>Total: ${{ sale.total_amount }}</p>
+    <ul>
+      {% for item in sale.items.all %}
+        <li>{{ item.product.name }} x {{ item.quantity }} - ${{ item.subtotal }}</li>
+      {% endfor %}
+    </ul>
+  </body>
+</html>

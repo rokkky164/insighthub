@@ -1,9 +1,7 @@
 from django.db.models import (
     ForeignKey,
     CharField,
-    DateField,
     DateTimeField,
-    OneToOneField,
     CASCADE,
     EmailField,
     TextField,

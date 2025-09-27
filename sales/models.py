@@ -9,6 +9,7 @@ from django.db.models import (
     DecimalField,
     IntegerField
 )
+from django.core.validators import MinValueValidator
 from common.models import GenericModel
 from accounts.models import Business
 from customers.models import Customer
@@ -33,7 +34,7 @@ class Sale(GenericModel):
 class SaleItem(GenericModel):
     sale = ForeignKey(Sale, on_delete=CASCADE, related_name="items")
     product = ForeignKey(Product, on_delete=SET_NULL, null=True, blank=True, related_name="sale_items")
-    quantity = IntegerField(default=1)
+    quantity = IntegerField(default=1, validators=[MinValueValidator(1)])
     price = DecimalField(max_digits=12, decimal_places=2)  # unit price at the time of sale
     subtotal = DecimalField(max_digits=12, decimal_places=2)  # quantity * price
 

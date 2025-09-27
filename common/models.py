@@ -1,10 +1,7 @@
 from django.db.models import (
     Model,
     ForeignKey,
-    CharField,
-    DateField,
     DateTimeField,
-    OneToOneField,
     SET_NULL
 )
 from django.conf import settings

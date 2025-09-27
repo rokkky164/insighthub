@@ -1,12 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.db.models import (
-    Model,
     TextChoices,
     CharField,
-    TextField,
-    OneToOneField,
     ForeignKey,
-    DateField,
     DateTimeField,
     CASCADE,
     SET_NULL
@@ -16,6 +12,7 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.core.cache import cache
 
+from accounts.constants import BUSINESS_LIST_CACHE_KEY
 from common.models import GenericModel
 
 
