@@ -1,0 +1,118 @@
+1. Product Management
+
+Add/Edit/Delete products
+
+Categorization of products
+
+SKU, price, description, and optional image
+
+Inventory tracking (current stock, low-stock alerts)
+
+Soft-delete / deactivate products
+
+***********************************************************************
+        Set up a scheduled stock import system that:
+
+        Pulls stock data from CSV (or another source)
+
+        Updates product inventory via bulk update
+
+        Uses Kafka to:
+
+        Decouple import logic
+
+        Allow for real-time or batch updates
+
+        Ensure reliability & scalability
+***********************************************************************
+
+                 +----------------------------+
+                 | Scheduled Job / Cron       |
+                 | (e.g., every 10 mins)      |
+                 +-------------+--------------+
+                               |
+                               v
+               +---------------+---------------+
+               |  Producer: Read CSV / Source   |
+               |  Sends product updates to      |
+               |  Kafka topic "stock_updates"   |
+               +---------------+---------------+
+                               |
+                      Kafka Topic: "stock_updates"
+                               |
+                               v
+             +----------------+----------------+
+             | Consumer: Django / Worker       |
+             | Reads messages and updates stock|
+             +----------------+----------------+
+                               |
+                         Django ORM: Product.objects.bulk_update()
+
+
+2. Sales & Transactions
+
+Record sales with multiple products (line items)
+
+Record quantity, price, and subtotal per product
+
+Payment method tracking (cash, card, online)
+
+Link sales to customers
+
+Automatic inventory deduction per sale
+
+Support for refunds/returns 
+
+3. Reporting & Analytics
+
+Dashboard with:
+
+Total sales today/this month
+
+Top-selling products
+
+Low stock alerts
+
+Export reports (CSV/Excel) for:
+
+Sales by date range
+
+Product-wise sales
+
+Customer purchase history (if implemented)
+
+Optional: basic charts (line/bar) for visual trends
+
+4. User & Access Management
+
+Single admin for MVP
+
+Optional staff role to record sales
+
+Business-level multi-tenancy (each business sees only its data)
+
+5. Notifications / Alerts
+
+Low stock alerts
+
+Optional: sales milestone alerts
+
+6. Settings & Configuration
+
+Tax configuration (GST or local tax)
+
+Currency and business info
+
+Optional: configurable payment methods
+
+MVP Focus Principle
+
+Must allow a small business to:
+
+Manage their products
+
+Record every sale
+
+Track inventory
+
+See simple reports and insights

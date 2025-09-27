@@ -4,7 +4,9 @@ from django.db.models import (
     DateField,
     DateTimeField,
     OneToOneField,
-    CASCADE
+    CASCADE,
+    SET_NULL,
+    BooleanField
 )
 from accounts.models import Business, User
 

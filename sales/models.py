@@ -4,8 +4,12 @@ from django.db.models import (
     DateField,
     DateTimeField,
     OneToOneField,
-    CASCADE
-)from core.models import GenericModel
+    CASCADE,
+    SET_NULL,
+    DecimalField,
+    IntegerField
+)
+from common.models import GenericModel
 from accounts.models import Business
 from customers.models import Customer
 from products.models import Product

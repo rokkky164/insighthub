@@ -6,7 +6,13 @@ from django.db.models import (
     OneToOneField,
     CASCADE,
     ImageField,
-    Index
+    Index,
+    TextField,
+    SET_NULL,
+    DecimalField,
+    IntegerField,
+    BooleanField,
+    URLField
 )
 from django.db.models import Manager
 
@@ -52,7 +58,7 @@ class Product(GenericModel):
     stock = IntegerField(default=0)
     low_stock_alert = IntegerField(default=0)
     is_active = BooleanField(default=True)
-    image = ImageField(upload_to="products/", null=True, blank=True)
+    image = URLField(null=True, blank=True)
     objects = ActiveProductManager()
     all_objects = Manager()
     
