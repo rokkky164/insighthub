@@ -83,7 +83,9 @@ REST_FRAMEWORK = {
         'django_filters.rest_framework.DjangoFilterBackend',
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter',
-    ]
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'common.pagination.StandardResultsSetPagination',
+    'PAGE_SIZE': 20,
 }
 
 WSGI_APPLICATION = 'insighthub.wsgi.application'
