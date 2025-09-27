@@ -4,7 +4,7 @@ from django.db.models import (
     CASCADE,
     SET_NULL,
     DecimalField,
-    PositiveIntegerField
+    PositiveIntegerField,
 )
 from common.models import GenericModel
 from accounts.models import Business
@@ -13,17 +13,9 @@ from products.models import Product
 
 
 class Sale(GenericModel):
-    business = ForeignKey(
-        Business,
-        on_delete=CASCADE,
-        related_name="sales"
-    )
+    business = ForeignKey(Business, on_delete=CASCADE, related_name="sales")
     customer = ForeignKey(
-        Customer,
-        on_delete=SET_NULL,
-        null=True,
-        blank=True,
-        related_name="sales"
+        Customer, on_delete=SET_NULL, null=True, blank=True, related_name="sales"
     )
     date = DateTimeField(auto_now_add=True)
     total_amount = DecimalField(max_digits=12, decimal_places=2, default=0)
@@ -33,16 +25,9 @@ class Sale(GenericModel):
 
 
 class SaleItem(GenericModel):
-    sale = ForeignKey(
-        Sale,
-        on_delete=CASCADE,
-        related_name="items"
-    )
+    sale = ForeignKey(Sale, on_delete=CASCADE, related_name="items")
     product = ForeignKey(
-        Product,
-        on_delete=SET_NULL,
-        null=True,
-        related_name="sale_items"
+        Product, on_delete=SET_NULL, null=True, related_name="sale_items"
     )
     quantity = PositiveIntegerField(default=1)
     price = DecimalField(max_digits=12, decimal_places=2)  # snapshot of product price

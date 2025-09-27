@@ -5,7 +5,7 @@ from rest_framework.serializers import (
     ChoiceField,
     EmailField,
     CharField,
-    ValidationError
+    ValidationError,
 )
 from .constants import AuthenticateType
 from .models import User, Business, UserBusiness
@@ -17,15 +17,15 @@ class SignupSerializer(ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'email', 'username', 'password', 'confirm_password']
+        fields = ["id", "email", "username", "password", "confirm_password"]
 
     def validate(self, data):
-        if data['password'] != data['confirm_password']:
+        if data["password"] != data["confirm_password"]:
             raise ValidationError("Passwords do not match.")
         return data
 
     def create(self, validated_data):
-        validated_data.pop('confirm_password')
+        validated_data.pop("confirm_password")
         user = User.objects.create_user(**validated_data)
         return user
 
@@ -56,7 +56,7 @@ class AuthenticateSerializer(Serializer):
 class UserSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'role']
+        fields = ["id", "username", "role"]
 
 
 class UserBusinessSimpleSerializer(ModelSerializer):
@@ -64,7 +64,7 @@ class UserBusinessSimpleSerializer(ModelSerializer):
 
     class Meta:
         model = UserBusiness
-        fields = ['user', 'role']
+        fields = ["user", "role"]
 
 
 class BusinessSerializer(ModelSerializer):
@@ -72,7 +72,7 @@ class BusinessSerializer(ModelSerializer):
 
     class Meta:
         model = Business
-        fields = ['id', 'name', 'industry', 'subscription_plan', 'users']
+        fields = ["id", "name", "industry", "subscription_plan", "users"]
 
 
 class UserBusinessSerializer(ModelSerializer):
@@ -81,4 +81,4 @@ class UserBusinessSerializer(ModelSerializer):
 
     class Meta:
         model = UserBusiness
-        fields = ['id', 'user', 'business', 'role', 'created_at']
+        fields = ["id", "user", "business", "role", "created_at"]

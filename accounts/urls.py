@@ -9,13 +9,13 @@ from .views import UserViewSet, BusinessViewSet, UserBusinessViewSet, SignupView
 
 router = DefaultRouter()
 
-router.register(r'signup', SignupViewSet, basename='signup')
-router.register(r'users', UserViewSet, basename='user')
-router.register(r'businesses', BusinessViewSet, basename='business')
-router.register(r'user-businesses', UserBusinessViewSet, basename='userbusiness')
+router.register(r"signup", SignupViewSet, basename="signup")
+router.register(r"users", UserViewSet, basename="user")
+router.register(r"businesses", BusinessViewSet, basename="business")
+router.register(r"user-businesses", UserBusinessViewSet, basename="userbusiness")
 
 urlpatterns = [
-    path('', include(router.urls)),
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path("", include(router.urls)),
+    path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 ]

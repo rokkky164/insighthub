@@ -5,7 +5,7 @@ from django.db.models import (
     ForeignKey,
     DateTimeField,
     CASCADE,
-    SET_NULL
+    SET_NULL,
 )
 
 from django.db.models.signals import post_save, post_delete
@@ -21,16 +21,13 @@ class User(AbstractUser):
     Custom user model with global role (optional).
     Roles: Admin, Manager, Viewer.
     """
+
     class Role(TextChoices):
         ADMIN = "ADMIN", "Admin"
         MANAGER = "MANAGER", "Manager"
         VIEWER = "VIEWER", "Viewer"
 
-    role = CharField(
-        max_length=20,
-        choices=Role.choices,
-        default=Role.VIEWER
-    )
+    role = CharField(max_length=20, choices=Role.choices, default=Role.VIEWER)
 
     def __str__(self):
         return f"{self.username} ({self.role})"
@@ -40,6 +37,7 @@ class Business(GenericModel):
     """
     Each tenant (small business) in the SaaS platform.
     """
+
     name = CharField(max_length=255)
     industry = CharField(max_length=100, blank=True, null=True)
     subscription_plan = CharField(max_length=50, default="Free")
@@ -54,16 +52,9 @@ class UserBusiness(GenericModel):
     Link between users and businesses.
     Allows per-business role assignment.
     """
-    user = ForeignKey(
-        User,
-        on_delete=CASCADE,
-        related_name="business_roles"
-    )
-    business = ForeignKey(
-        Business,
-        on_delete=CASCADE,
-        related_name="users"
-    )
+
+    user = ForeignKey(User, on_delete=CASCADE, related_name="business_roles")
+    business = ForeignKey(Business, on_delete=CASCADE, related_name="users")
     role = CharField(max_length=20, choices=User.Role.choices)
 
     created_at = DateTimeField(auto_now_add=True)

@@ -3,8 +3,8 @@ from django.urls import path, include
 from .views import SaleViewSet
 
 router = DefaultRouter()
-router.register(r'sales', SaleViewSet, basename='sale')
+router.register(r"sales", SaleViewSet, basename="sale")
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path("", include(router.urls)),
 ]

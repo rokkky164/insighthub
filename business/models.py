@@ -7,7 +7,7 @@ from django.db.models import (
     CASCADE,
     SET_NULL,
     BooleanField,
-    DecimalField
+    DecimalField,
 )
 from accounts.models import Business, User
 
@@ -18,18 +18,15 @@ class Department(GenericModel):
     """
     Departments within a business (e.g., Sales, Marketing, IT).
     """
-    business = ForeignKey(
-        Business,
-        on_delete=CASCADE,
-        related_name="departments"
-    )
+
+    business = ForeignKey(Business, on_delete=CASCADE, related_name="departments")
     name = CharField(max_length=100)
     head = ForeignKey(
         User,
         on_delete=SET_NULL,
         null=True,
         blank=True,
-        related_name="headed_departments"
+        related_name="headed_departments",
     )
 
     def __str__(self):
@@ -55,11 +52,8 @@ class BusinessPlanHistory(GenericModel):
     """
     Tracks subscription plan changes (Free, Pro, Premium).
     """
-    business = ForeignKey(
-        Business,
-        on_delete=CASCADE,
-        related_name="plan_history"
-    )
+
+    business = ForeignKey(Business, on_delete=CASCADE, related_name="plan_history")
     plan_name = CharField(max_length=50)
     start_date = DateField()
     end_date = DateField(null=True, blank=True)  # null = active plan

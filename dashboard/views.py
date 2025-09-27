@@ -21,57 +21,78 @@ class DashboardView(APIView):
         start_of_month = today.replace(day=1)
 
         # Total sales today and this month
-        total_sales_today = Sale.objects.filter(sale_date__date=today).aggregate(total=Sum('total_amount'))['total'] or 0
-        total_sales_month = Sale.objects.filter(sale_date__date__gte=start_of_month).aggregate(total=Sum('total_amount'))['total'] or 0
+        total_sales_today = (
+            Sale.objects.filter(sale_date__date=today).aggregate(
+                total=Sum("total_amount")
+            )["total"]
+            or 0
+        )
+        total_sales_month = (
+            Sale.objects.filter(sale_date__date__gte=start_of_month).aggregate(
+                total=Sum("total_amount")
+            )["total"]
+            or 0
+        )
 
         # Top-selling products
         top_products = (
-            SaleItem.objects
-            .values('product__name')
-            .annotate(quantity_sold=Sum('quantity'))
-            .order_by('-quantity_sold')[:5]
+            SaleItem.objects.values("product__name")
+            .annotate(quantity_sold=Sum("quantity"))
+            .order_by("-quantity_sold")[:5]
         )
 
         # Low stock products
-        low_stock = Product.objects.filter(inventory_quantity__lt=5).values('name', 'inventory_quantity')
+        low_stock = Product.objects.filter(inventory_quantity__lt=5).values(
+            "name", "inventory_quantity"
+        )
 
-        return Response({
-            "total_sales_today": total_sales_today,
-            "total_sales_month": total_sales_month,
-            "top_products": list(top_products),
-            "low_stock": list(low_stock)
-        })
+        return Response(
+            {
+                "total_sales_today": total_sales_today,
+                "total_sales_month": total_sales_month,
+                "top_products": list(top_products),
+                "low_stock": list(low_stock),
+            }
+        )
 
 
 class SalesCSVExportView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        start = parse_date(request.GET.get('start'))
-        end = parse_date(request.GET.get('end'))
+        start = parse_date(request.GET.get("start"))
+        end = parse_date(request.GET.get("end"))
 
         if not start or not end:
-            return Response({'error': 'start and end date required'}, status=400)
+            return Response({"error": "start and end date required"}, status=400)
 
-        sales = Sale.objects.filter(sale_date__date__gte=start, sale_date__date__lte=end).prefetch_related('items', 'customer')
+        sales = Sale.objects.filter(
+            sale_date__date__gte=start, sale_date__date__lte=end
+        ).prefetch_related("items", "customer")
 
         # Generate CSV
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = f'attachment; filename="sales_{start}_{end}.csv"'
+        response = HttpResponse(content_type="text/csv")
+        response["Content-Disposition"] = (
+            f'attachment; filename="sales_{start}_{end}.csv"'
+        )
         writer = csv.writer(response)
-        writer.writerow(['Sale ID', 'Date', 'Customer', 'Product', 'Quantity', 'Price', 'Subtotal'])
+        writer.writerow(
+            ["Sale ID", "Date", "Customer", "Product", "Quantity", "Price", "Subtotal"]
+        )
 
         for sale in sales:
             for item in sale.items.all():
-                writer.writerow([
-                    sale.id,
-                    sale.sale_date.strftime('%Y-%m-%d %H:%M'),
-                    sale.customer.name if sale.customer else 'Guest',
-                    item.product.name if item.product else 'N/A',
-                    item.quantity,
-                    item.price,
-                    item.subtotal,
-                ])
+                writer.writerow(
+                    [
+                        sale.id,
+                        sale.sale_date.strftime("%Y-%m-%d %H:%M"),
+                        sale.customer.name if sale.customer else "Guest",
+                        item.product.name if item.product else "N/A",
+                        item.quantity,
+                        item.price,
+                        item.subtotal,
+                    ]
+                )
 
         return response
 
@@ -80,48 +101,45 @@ class SalesChartView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        start = parse_date(request.GET.get('start'))
-        end = parse_date(request.GET.get('end'))
+        start = parse_date(request.GET.get("start"))
+        end = parse_date(request.GET.get("end"))
 
         if not start or not end:
-            return Response({'error': 'start and end date required'}, status=400)
+            return Response({"error": "start and end date required"}, status=400)
 
         sales_by_day = (
-            Sale.objects
-            .filter(sale_date__date__gte=start, sale_date__date__lte=end)
-            .annotate(day=TruncDay('sale_date'))
-            .values('day')
-            .annotate(total=Sum('total_amount'))
-            .order_by('day')
+            Sale.objects.filter(sale_date__date__gte=start, sale_date__date__lte=end)
+            .annotate(day=TruncDay("sale_date"))
+            .values("day")
+            .annotate(total=Sum("total_amount"))
+            .order_by("day")
         )
 
         # Return chart-friendly format
-        labels = [entry['day'].strftime('%Y-%m-%d') for entry in sales_by_day]
-        totals = [entry['total'] for entry in sales_by_day]
+        labels = [entry["day"].strftime("%Y-%m-%d") for entry in sales_by_day]
+        totals = [entry["total"] for entry in sales_by_day]
 
-        return Response({
-            "labels": labels,
-            "totals": totals
-        })
+        return Response({"labels": labels, "totals": totals})
 
 
 class ProductSalesChartView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        start = parse_date(request.GET.get('start'))
-        end = parse_date(request.GET.get('end'))
+        start = parse_date(request.GET.get("start"))
+        end = parse_date(request.GET.get("end"))
         if not start or not end:
-            return Response({'error': 'start and end date required'}, status=400)
+            return Response({"error": "start and end date required"}, status=400)
 
         # Aggregate sale items by day and product
         sales_data = (
-            SaleItem.objects
-            .filter(sale__sale_date__date__gte=start, sale__sale_date__date__lte=end)
-            .annotate(day=TruncDay('sale__sale_date'))
-            .values('day', 'product__name')
-            .annotate(total=Sum('subtotal'))
-            .order_by('day')
+            SaleItem.objects.filter(
+                sale__sale_date__date__gte=start, sale__sale_date__date__lte=end
+            )
+            .annotate(day=TruncDay("sale__sale_date"))
+            .values("day", "product__name")
+            .annotate(total=Sum("subtotal"))
+            .order_by("day")
         )
 
         # Prepare data structure for frontend charts
@@ -135,8 +153,8 @@ class ProductSalesChartView(APIView):
         # }
 
         # Extract sorted unique dates and products
-        dates = sorted({entry['day'].date() for entry in sales_data})
-        products = sorted({entry['product__name'] for entry in sales_data})
+        dates = sorted({entry["day"].date() for entry in sales_data})
+        products = sorted({entry["product__name"] for entry in sales_data})
 
         # Initialize dataset dict: {product: [0]*len(dates)}
         data_map = {product: [0] * len(dates) for product in products}
@@ -146,55 +164,50 @@ class ProductSalesChartView(APIView):
 
         # Fill data_map
         for entry in sales_data:
-            d = entry['day'].date()
-            p = entry['product__name']
+            d = entry["day"].date()
+            p = entry["product__name"]
             idx = date_index[d]
-            data_map[p][idx] = float(entry['total'])  # convert Decimal to float for JSON
+            data_map[p][idx] = float(
+                entry["total"]
+            )  # convert Decimal to float for JSON
 
         # Format labels as strings
-        labels = [date.strftime('%Y-%m-%d') for date in dates]
+        labels = [date.strftime("%Y-%m-%d") for date in dates]
 
-        return Response({
-            "labels": labels,
-            "datasets": data_map
-        })
+        return Response({"labels": labels, "datasets": data_map})
 
 
 class CustomerSalesChartView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        start = parse_date(request.GET.get('start'))
-        end = parse_date(request.GET.get('end'))
+        start = parse_date(request.GET.get("start"))
+        end = parse_date(request.GET.get("end"))
         if not start or not end:
-            return Response({'error': 'start and end date required'}, status=400)
+            return Response({"error": "start and end date required"}, status=400)
 
         # Aggregate sales by day and customer
         sales_data = (
-            Sale.objects
-            .filter(sale_date__date__gte=start, sale_date__date__lte=end)
-            .annotate(day=TruncDay('sale_date'))
-            .values('day', 'customer__name')
-            .annotate(total=Sum('total_amount'))
-            .order_by('day')
+            Sale.objects.filter(sale_date__date__gte=start, sale_date__date__lte=end)
+            .annotate(day=TruncDay("sale_date"))
+            .values("day", "customer__name")
+            .annotate(total=Sum("total_amount"))
+            .order_by("day")
         )
 
         # Extract unique dates and customers
-        dates = sorted({entry['day'].date() for entry in sales_data})
-        customers = sorted({entry['customer__name'] or 'Guest' for entry in sales_data})
+        dates = sorted({entry["day"].date() for entry in sales_data})
+        customers = sorted({entry["customer__name"] or "Guest" for entry in sales_data})
 
         data_map = {customer: [0] * len(dates) for customer in customers}
         date_index = {date: idx for idx, date in enumerate(dates)}
 
         for entry in sales_data:
-            d = entry['day'].date()
-            customer = entry['customer__name'] or 'Guest'
+            d = entry["day"].date()
+            customer = entry["customer__name"] or "Guest"
             idx = date_index[d]
-            data_map[customer][idx] = float(entry['total'])
+            data_map[customer][idx] = float(entry["total"])
 
-        labels = [date.strftime('%Y-%m-%d') for date in dates]
+        labels = [date.strftime("%Y-%m-%d") for date in dates]
 
-        return Response({
-            "labels": labels,
-            "datasets": data_map
-        })
+        return Response({"labels": labels, "datasets": data_map})

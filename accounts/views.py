@@ -9,10 +9,19 @@ from rest_framework import generics, status, filters
 from common.exception import InsightHubException
 from common.pagination import StandardResultsSetPagination
 from .models import User, Business, UserBusiness
-from .serializers import UserSerializer, BusinessSerializer, UserBusinessSerializer, AuthenticateSerializer
+from .serializers import (
+    UserSerializer,
+    BusinessSerializer,
+    UserBusinessSerializer,
+    AuthenticateSerializer,
+)
 from .filters import UserFilter, BusinessFilter, UserBusinessFilter
 from .permissions import IsBusinessUser
-from .constants import AuthenticateType, BUSINESS_LIST_CACHE_KEY, BUSINESS_LIST_CACHE_TIMEOUT
+from .constants import (
+    AuthenticateType,
+    BUSINESS_LIST_CACHE_KEY,
+    BUSINESS_LIST_CACHE_TIMEOUT,
+)
 
 from rest_framework import viewsets, status
 from rest_framework.response import Response
@@ -30,12 +39,15 @@ class SignupViewSet(viewsets.GenericViewSet):
 
         if serializer.is_valid():
             user = serializer.save()
-            return Response({
-                "message": "User created successfully.",
-                "user_id": user.id,
-                "email": user.email
-            }, status=status.HTTP_201_CREATED)
-        
+            return Response(
+                {
+                    "message": "User created successfully.",
+                    "user_id": user.id,
+                    "email": user.email,
+                },
+                status=status.HTTP_201_CREATED,
+            )
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -63,7 +75,7 @@ class LoginView(AuthenticateAPIView):
     def post(self, request, format=None):
         request.data["type"] = AuthenticateType.login_with_password.value
         return super().post(request, format)
-    
+
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = User.objects.all()
@@ -80,7 +92,9 @@ class BusinessViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     filterset_class = BusinessFilter
 
     def list(self, request, *args, **kwargs):
-        cache_key = f"{BUSINESS_LIST_CACHE_KEY}_page_{request.query_params.get('page', 1)}"
+        cache_key = (
+            f"{BUSINESS_LIST_CACHE_KEY}_page_{request.query_params.get('page', 1)}"
+        )
         cached_data = cache.get(cache_key)
 
         if cached_data is None:
@@ -92,7 +106,7 @@ class BusinessViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 
 class UserBusinessViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = UserBusiness.objects.select_related('user', 'business').all()
+    queryset = UserBusiness.objects.select_related("user", "business").all()
     serializer_class = UserBusinessSerializer
     filterset_class = UserBusinessFilter
     pagination_class = StandardResultsSetPagination

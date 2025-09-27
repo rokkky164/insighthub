@@ -9,7 +9,7 @@ from django.db.models import (
     IntegerField,
     BooleanField,
     URLField,
-    DateTimeField
+    DateTimeField,
 )
 from django.db.models import Manager
 from django.conf import settings
@@ -20,9 +20,7 @@ from accounts.models import Business
 
 class ProductCategory(GenericModel):
     business = ForeignKey(
-        Business,
-        on_delete=CASCADE,
-        related_name="product_categories"
+        Business, on_delete=CASCADE, related_name="product_categories"
     )
     name = CharField(max_length=100)
     description = TextField(blank=True, null=True)
@@ -37,17 +35,13 @@ class ActiveProductManager(Manager):
 
 
 class Product(GenericModel):
-    business = ForeignKey(
-        Business,
-        on_delete=CASCADE,
-        related_name="products"
-    )
+    business = ForeignKey(Business, on_delete=CASCADE, related_name="products")
     category = ForeignKey(
         ProductCategory,
         on_delete=SET_NULL,
         null=True,
         blank=True,
-        related_name="products"
+        related_name="products",
     )
     name = CharField(max_length=255)
     sku = CharField(max_length=50)
@@ -59,21 +53,23 @@ class Product(GenericModel):
     image = URLField(null=True, blank=True)
     objects = ActiveProductManager()
     all_objects = Manager()
-    
+
     class Meta:
-        unique_together = ('business', 'sku')
-        indexes = [Index(fields=['sku'])]
+        unique_together = ("business", "sku")
+        indexes = [Index(fields=["sku"])]
 
     def __str__(self):
         return f"{self.name} - {self.sku}"
-    
+
     def delete(self, *args, **kwargs):
         self.is_active = False
         self.save()
 
 
 class Notification(GenericModel):
-    user = ForeignKey(settings.AUTH_USER_MODEL, on_delete=CASCADE, related_name='notifications')
+    user = ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=CASCADE, related_name="notifications"
+    )
     message = TextField()
     created_at = DateTimeField(auto_now_add=True)
     read = BooleanField(default=False)

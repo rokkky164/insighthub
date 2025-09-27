@@ -7,7 +7,9 @@ from sales.models import SaleItem
 
 
 def check_low_stock():
-    low_stock_products = Product.objects.filter(inventory_quantity__lt=LOW_STOCK_THRESHOLD)
+    low_stock_products = Product.objects.filter(
+        inventory_quantity__lt=LOW_STOCK_THRESHOLD
+    )
     if low_stock_products.exists():
         # Send notification to admin/staff
         for product in low_stock_products:
