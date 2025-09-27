@@ -8,9 +8,11 @@ from django.db.models import (
     DecimalField,
     IntegerField,
     BooleanField,
-    URLField
+    URLField,
+    DateTimeField
 )
 from django.db.models import Manager
+from django.conf import settings
 
 from common.models import GenericModel
 from accounts.models import Business
@@ -68,3 +70,10 @@ class Product(GenericModel):
     def delete(self, *args, **kwargs):
         self.is_active = False
         self.save()
+
+
+class Notification(GenericModel):
+    user = ForeignKey(settings.AUTH_USER_MODEL, on_delete=CASCADE, related_name='notifications')
+    message = TextField()
+    created_at = DateTimeField(auto_now_add=True)
+    read = BooleanField(default=False)

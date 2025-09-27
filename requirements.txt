@@ -1,6 +1,7 @@
 asgiref==3.8.1
 black==24.8.0
 click==8.1.7
+celery==5.4.0
 colorama==0.4.6
 Django==5.1.1
 django-filter==25.1
@@ -9,6 +10,7 @@ django-extensions==3.2.3
 djangorestframework==3.15.2
 djangorestframework-simplejwt==5.3.1
 django-redis==6.0.0
+django-celery-beat==2.7.0
 ipython==7.9.0
 ipython-genutils==0.2.0
 mypy-extensions==1.0.0
