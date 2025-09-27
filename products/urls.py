@@ -7,8 +7,9 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     ProductViewSet,
     ProductCategoryViewSet,
-    ProductCsvUploadView,
+    ProductCSVUploadView,
     download_csv_template,
+    export_csv
 )
 
 router = DefaultRouter()
@@ -27,6 +28,8 @@ urlpatterns = [
         download_csv_template,
         name="download-products-csv-template",
     ),
-    path("api/products/export-csv/", export_csv, name="export_csv"),
-    static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),
+    path("api/products/export-csv/", export_csv, name="export_csv")
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

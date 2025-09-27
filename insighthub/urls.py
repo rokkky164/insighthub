@@ -15,8 +15,17 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, re_path, include
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    re_path(r"^", include("accounts.urls")),
+    # re_path(r"^", include("billing.urls")),
+    re_path(r"^", include("business.urls")),
+    # re_path(r"^", include("common.urls")),
+    # re_path(r"^", include("customers.urls")),
+    re_path(r"^", include("dashboard.urls")),
+    # re_path(r"^", include("inventory.urls")),
+    re_path(r"^", include("products.urls")),
+    re_path(r"^", include("sales.urls")),
 ]

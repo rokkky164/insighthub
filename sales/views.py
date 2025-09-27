@@ -1,9 +1,10 @@
 from django.template.loader import render_to_string
-from weasyprint import HTML
 from django.http import HttpResponse
-
-from rest_framework import viewsets, action
+from weasyprint import HTML
+from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+
 from .models import Sale
 from .serializers import SaleSerializer
 from .filters import SaleFilter

@@ -1,6 +1,5 @@
 from django.core.cache import cache
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework_tracking.mixins import LoggingMixin
 from rest_framework import generics, status, viewsets, mixins
 from rest_framework.response import Response
 # App Imports
@@ -45,7 +44,7 @@ class SignupViewSet(viewsets.GenericViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class AuthenticateAPIView(LoggingMixin, generics.GenericAPIView):
+class AuthenticateAPIView(generics.GenericAPIView):
     permission_classes = [AllowAny]
     serializer_class = AuthenticateSerializer
 
