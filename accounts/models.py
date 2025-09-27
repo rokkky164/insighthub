@@ -12,6 +12,10 @@ from django.db.models import (
     SET_NULL
 )
 
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+from django.core.cache import cache
+
 from common.models import GenericModel
 
 
@@ -72,3 +76,8 @@ class UserBusiness(GenericModel):
 
     def __str__(self):
         return f"{self.user.username} - {self.business.name} ({self.role})"
+
+
+@receiver([post_save, post_delete], sender=Business)
+def clear_business_cache(sender, **kwargs):
+    cache.delete(BUSINESS_LIST_CACHE_KEY)
