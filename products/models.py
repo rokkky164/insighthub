@@ -15,7 +15,7 @@ from django.db.models import Manager
 from django.conf import settings
 
 from common.models import GenericModel
-from accounts.models import Business
+from business.models import Business
 
 
 class ProductCategory(GenericModel):

@@ -8,7 +8,7 @@ from rest_framework.serializers import (
     ValidationError,
 )
 from .constants import AuthenticateType
-from .models import User, Business, UserBusiness
+from .models import User
 from accounts.managers.user_manager import UserManager
 
 
@@ -56,28 +56,3 @@ class UserSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = ["id", "username", "role"]
-
-
-class UserBusinessSimpleSerializer(ModelSerializer):
-    user = UserSerializer(read_only=True)
-
-    class Meta:
-        model = UserBusiness
-        fields = ["user", "role"]
-
-
-class BusinessSerializer(ModelSerializer):
-    users = UserBusinessSimpleSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Business
-        fields = ["id", "name", "industry", "subscription_plan", "users"]
-
-
-class UserBusinessSerializer(ModelSerializer):
-    user = UserSerializer(read_only=True)
-    business = BusinessSerializer(read_only=True)
-
-    class Meta:
-        model = UserBusiness
-        fields = ["id", "user", "business", "role", "created_at"]

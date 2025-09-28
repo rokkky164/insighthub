@@ -8,7 +8,7 @@ from django.db.models import (
     TextChoices,
 )
 from common.models import GenericModel
-from accounts.models import Business
+from business.models import Business
 
 
 class Customer(GenericModel):

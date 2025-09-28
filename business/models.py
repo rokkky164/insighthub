@@ -9,9 +9,43 @@ from django.db.models import (
     BooleanField,
     DecimalField,
 )
-from accounts.models import Business, User
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+from django.core.cache import cache
 
+from accounts.models import User
+from business.constants import BUSINESS_LIST_CACHE_KEY
 from common.models import GenericModel
+
+
+class Business(GenericModel):
+    """
+    Each tenant (small business) in the SaaS platform.
+    """
+
+    name = CharField(max_length=255)
+    industry = CharField(max_length=100, blank=True, null=True)
+    subscription_plan = CharField(max_length=50, default="Free")
+
+    def __str__(self):
+        return self.name
+
+
+class UserBusiness(GenericModel):
+    """
+    Link between users and businesses.
+    Allows per-business role assignment.
+    """
+
+    user = ForeignKey(User, on_delete=CASCADE, related_name="business_roles")
+    business = ForeignKey(Business, on_delete=CASCADE, related_name="users")
+    role = CharField(max_length=20, choices=User.Role.choices)
+
+    class Meta:
+        unique_together = ("user", "business")
+
+    def __str__(self):
+        return f"{self.user.username} - {self.business.name} ({self.role})"
 
 
 class Department(GenericModel):
@@ -70,3 +104,8 @@ class PaymentMethod(GenericModel):
 
     def __str__(self):
         return f"{self.method_name} ({'Active' if self.active else 'Inactive'})"
+
+
+@receiver([post_save, post_delete], sender=Business)
+def clear_business_cache(sender, **kwargs):
+    cache.delete(BUSINESS_LIST_CACHE_KEY)

@@ -11,7 +11,7 @@ from django.db.models import (
 )
 from django.core.validators import MinValueValidator
 from common.models import GenericModel
-from accounts.models import Business
+from business.models import Business
 from customers.models import Customer
 from products.models import Product
 
