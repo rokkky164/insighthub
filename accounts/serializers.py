@@ -9,6 +9,7 @@ from rest_framework.serializers import (
 )
 from .constants import AuthenticateType
 from .models import User, Business, UserBusiness
+from accounts.managers.user_manager import UserManager
 
 
 class SignupSerializer(ModelSerializer):
@@ -37,20 +38,18 @@ class AuthenticateSerializer(Serializer):
     password = CharField(required=False)
     phone = CharField(required=False)
     employee_number = CharField(required=False)
+    manager = UserManager()
 
-    # def validate(self, attrs):
-    #     auth_type = attrs["type"]
-    #     if auth_type == AuthenticateType.login_with_otp.value:
-    #         return self.validate_for_login_with_otp(attrs)
-    #     if auth_type == AuthenticateType.login_with_password.value:
-    #         self.validate_for_login_with_password(attrs=attrs)
-    #         return self.login_with_password(attrs=attrs)
-    #     if auth_type == AuthenticateType.validate_otp.value:
-    #         self.validate_for_otp(attrs=attrs)
-    #         return self.login_with_otp(attrs=attrs)
-    #     if auth_type == AuthenticateType.validate_security_question.value:
-    #         self.validate_for_security_question(attrs)
-    #         return self.login_with_security_question(attrs=attrs)
+    def validate(self, attrs):
+        auth_type = attrs["type"]
+        if auth_type == AuthenticateType.login_with_otp.value:
+            return self.validate_for_login_with_otp(attrs)
+        if auth_type == AuthenticateType.login_with_password.value:
+            return self.manager.validate_and_login_with_email(email=attrs["email"], password=attrs["password"])
+    
+    # def login_with_password(self, attrs):
+    #     user = User.objects.filter(email=attrs["email"]).first()
+    #     return self.manager.get_token_for_user(user)
 
 
 class UserSerializer(ModelSerializer):

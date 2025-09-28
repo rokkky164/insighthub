@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 import os
 
+from datetime import timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -171,3 +172,12 @@ AUTH_USER_MODEL = "accounts.User"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=90),  # Token expiration time
+    # Refresh token expiration time
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ALGORITHM": "HS256",  # Default symmetric encryption algorithm
+    "SIGNING_KEY": SECRET_KEY,  # Use Django's SECRET_KEY for signing tokens
+    "AUTH_HEADER_TYPES": ("Bearer",),  # Authorization type for header
+}

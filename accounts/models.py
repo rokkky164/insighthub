@@ -11,6 +11,8 @@ from django.dispatch import receiver
 from django.core.cache import cache
 
 from accounts.constants import BUSINESS_LIST_CACHE_KEY
+from accounts.managers.base_manager import BaseModelManager
+
 from common.models import GenericModel
 
 

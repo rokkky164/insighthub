@@ -5,6 +5,7 @@ from rest_framework.response import Response
 # App Imports
 from common.exception import InsightHubException
 from common.pagination import StandardResultsSetPagination
+from common.errors import ERROR_DETAILS
 from .models import User, Business, UserBusiness
 from .serializers import (
     UserSerializer,
@@ -53,10 +54,10 @@ class AuthenticateAPIView(generics.GenericAPIView):
         try:
             serializer.is_valid(raise_exception=True)
         except Exception as err:
-            if type(e) is ValueError:
+            if type(err) is ValueError:
                 raise InsightHubException(
-                    code=e.args[0],
-                    detail=ERROR_DETAILS[e.args[0]],
+                    code=err.args[0],
+                    detail=ERROR_DETAILS[err.args[0]],
                     status_code=status.HTTP_400_BAD_REQUEST,
                 )
             raise err
@@ -65,8 +66,13 @@ class AuthenticateAPIView(generics.GenericAPIView):
 
 
 class LoginView(AuthenticateAPIView):
+    permission_classes = [AllowAny]
+
     def post(self, request, format=None):
-        request.data["type"] = AuthenticateType.login_with_password.value
+        if "password" in request.data:
+            request.data["type"] = AuthenticateType.login_with_password.value
+        if "otp" in request.data:
+            request.data["type"] = AuthenticateType.login_with_otp.value
         return super().post(request, format)
 
 
