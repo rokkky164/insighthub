@@ -24,6 +24,7 @@ class Business(GenericModel):
     """
 
     name = CharField(max_length=255)
+    address = CharField(max_length=255, blank=True, null=True)
     industry = CharField(max_length=100, blank=True, null=True)
     subscription_plan = CharField(max_length=50, default="Free")
 

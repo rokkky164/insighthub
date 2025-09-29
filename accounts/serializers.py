@@ -37,7 +37,6 @@ class SignupSerializer(ModelSerializer):
 
 
 class AuthenticateSerializer(Serializer):
-
     type = ChoiceField(choices=AuthenticateType.choices())
     email = EmailField(required=False)
     password = CharField(required=False)
@@ -51,10 +50,6 @@ class AuthenticateSerializer(Serializer):
             return self.validate_for_login_with_otp(attrs)
         if auth_type == AuthenticateType.login_with_password.value:
             return self.manager.validate_and_login_with_email(email=attrs["email"], password=attrs["password"])
-    
-    # def login_with_password(self, attrs):
-    #     user = User.objects.filter(email=attrs["email"]).first()
-    #     return self.manager.get_token_for_user(user)
 
 
 class UserSerializer(ModelSerializer):
