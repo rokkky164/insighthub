@@ -1,23 +1,23 @@
-from rest_framework import serializers
+from rest_framework.serializers import ModelSerializer, CharField
 from business.models import Business
 from .models import ProductCategory, Product
 
 
-class BusinessSerializer(serializers.ModelSerializer):
+class BusinessSerializer(ModelSerializer):
     class Meta:
         model = Business
         fields = ["id", "name", "industry", "subscription_plan"]  # match your model
 
 
-class ProductCategorySerializer(serializers.ModelSerializer):
+class ProductCategorySerializer(ModelSerializer):
     class Meta:
         model = ProductCategory
         fields = ["id", "name", "description"]  # no nested business here
 
 
-class ProductSerializer(serializers.ModelSerializer):
+class ProductSerializer(ModelSerializer):
     business = BusinessSerializer()  # nested creation
-    category = serializers.CharField(required=False, allow_null=True)  # just name
+    category = CharField(required=False, allow_null=True)  # just name
 
     class Meta:
         model = Product

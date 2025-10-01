@@ -8,8 +8,7 @@ from django.db.models import (
     DecimalField,
     IntegerField,
     BooleanField,
-    URLField,
-    DateTimeField,
+    URLField
 )
 from django.db.models import Manager
 from django.conf import settings
@@ -71,5 +70,4 @@ class Notification(GenericModel):
         settings.AUTH_USER_MODEL, on_delete=CASCADE, related_name="notifications"
     )
     message = TextField()
-    created_at = DateTimeField(auto_now_add=True)
     read = BooleanField(default=False)
