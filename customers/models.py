@@ -70,9 +70,6 @@ class Customer(Party):
 class Supplier(Party):
     account_balance = DecimalField(max_digits=12, decimal_places=2, default=0)
 
-    class Meta:
-        proxy = True
-
     def save(self, *args, **kwargs):
         self.is_supplier = True
         super().save(*args, **kwargs)

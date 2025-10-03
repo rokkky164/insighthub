@@ -57,13 +57,9 @@ class ProductAdmin(admin.ModelAdmin):
         "sku",
         "business",
         "category",
-        "price",
-        "stock",
-        "low_stock_alert",
         "is_active",
     )
     search_fields = ("name", "sku", "description")
     list_filter = ("category", "business", "is_active")
-    list_editable = ("stock", "low_stock_alert", "is_active")
     ordering = ("name",)
     actions = [make_active, make_inactive, export_to_csv]

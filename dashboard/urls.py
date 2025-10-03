@@ -5,6 +5,7 @@ from .views import (
     SalesChartView,
     ProductSalesChartView,
     CustomerSalesChartView,
+    AnalyticsDashboardView,
 )
 
 urlpatterns = [
@@ -21,4 +22,5 @@ urlpatterns = [
         CustomerSalesChartView.as_view(),
         name="customer_sales_chart",
     ),
+    path("dashboard/", AnalyticsDashboardView.as_view(), name="analytics-dashboard"),
 ]

@@ -3,14 +3,17 @@ import csv
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+
 from django.utils.timezone import now
 from django.db.models import Sum
 from django.db.models.functions import TruncDay
-from products.models import Product
-from sales.models import Sale, SaleItem
 from django.http import HttpResponse
 from django.utils.dateparse import parse_date
-from django.db.models import Sum
+from django.db.models import Sum, F
+
+from sales.models import Sale, SaleItem, Purchase
+from billing.models import Invoice, BillingPayment
+from products.models import Product
 
 
 class DashboardView(APIView):
@@ -211,3 +214,96 @@ class CustomerSalesChartView(APIView):
         labels = [date.strftime("%Y-%m-%d") for date in dates]
 
         return Response({"labels": labels, "datasets": data_map})
+
+
+class AnalyticsDashboardView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        business = request.user.business  # assuming each user is linked to a business
+
+        # ----- Sales Metrics -----
+        sales = Sale.objects.filter(customer__business=business)
+        total_sales = sales.aggregate(total=Sum("total_amount"))["total"] or 0
+        total_sale_invoices = Invoice.objects.filter(
+            sale__customer__business=business
+        ).count()
+        avg_invoice_value = (
+            total_sales / total_sale_invoices if total_sale_invoices else 0
+        )
+
+        # Top Selling Products
+        top_products = (
+            SaleItem.objects.filter(sale__customer__business=business)
+            .values("product__name")
+            .annotate(
+                total_qty=Sum("quantity"), total_sales=Sum(F("quantity") * F("price"))
+            )
+            .order_by("-total_qty")[:5]
+        )
+
+        # ----- Purchase Metrics -----
+        purchases = Purchase.objects.filter(business=business)
+        total_purchases = purchases.aggregate(total=Sum("total_amount"))["total"] or 0
+        total_purchase_invoices = Invoice.objects.filter(
+            purchase__business=business
+        ).count()
+        avg_purchase_value = (
+            total_purchases / total_purchase_invoices if total_purchase_invoices else 0
+        )
+
+        # ----- Invoices & Payments -----
+        pending_invoices = Invoice.objects.filter(
+            business=business, status="pending"
+        ).count()
+        paid_invoices = Invoice.objects.filter(business=business, status="paid").count()
+        overdue_invoices = Invoice.objects.filter(
+            business=business, status="overdue"
+        ).count()
+
+        # ----- Stock Levels -----
+        low_stock_products = Product.objects.filter(
+            business=business, stock__lte=F("low_stock_alert")
+        ).values("name", "stock", "low_stock_alert")
+
+        # ----- Cash & Receivables -----
+        total_payments_received = (
+            Payment.objects.filter(
+                invoice__sale__customer__business=business, is_confirmed=True
+            ).aggregate(total=Sum("amount"))["total"]
+            or 0
+        )
+
+        total_receivables = (
+            Invoice.objects.filter(business=business, status="pending").aggregate(
+                total=Sum("total_amount")
+            )["total"]
+            or 0
+        )
+
+        # ----- Response -----
+        data = {
+            "sales": {
+                "total_sales": total_sales,
+                "total_invoices": total_sale_invoices,
+                "avg_invoice_value": avg_invoice_value,
+                "top_products": list(top_products),
+            },
+            "purchases": {
+                "total_purchases": total_purchases,
+                "total_invoices": total_purchase_invoices,
+                "avg_purchase_value": avg_purchase_value,
+            },
+            "invoices": {
+                "pending": pending_invoices,
+                "paid": paid_invoices,
+                "overdue": overdue_invoices,
+            },
+            "stock": list(low_stock_products),
+            "cash": {
+                "total_received": total_payments_received,
+                "total_receivables": total_receivables,
+            },
+        }
+
+        return Response(data)

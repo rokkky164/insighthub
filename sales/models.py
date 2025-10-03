@@ -10,6 +10,7 @@ from django.db.models import (
     IntegerField,
     TextField,
     EmailField,
+    PositiveIntegerField,
 )
 from django.core.validators import MinValueValidator
 from django.db import transaction
@@ -21,10 +22,12 @@ from products.models import Product
 
 class Sale(GenericModel):
     customer = ForeignKey(
-        "Customer", on_delete=SET_NULL, null=True, blank=True, related_name="sales"
+        "customers.Customer", on_delete=SET_NULL, null=True, blank=True, related_name="sales"
     )
     sale_date = DateTimeField(auto_now_add=True)
-    total_amount = DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
+    total_amount = DecimalField(
+        max_digits=12, decimal_places=2, validators=[MinValueValidator(0)]
+    )
     payment_method = CharField(
         max_length=50,
         choices=[("cash", "Cash"), ("card", "Card"), ("online", "Online Payment")],
@@ -89,35 +92,39 @@ class SaleItem(GenericModel):
     price = DecimalField(
         max_digits=12, decimal_places=2
     )  # unit price at the time of sale
-    subtotal = DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])  # quantity * price
+    subtotal = DecimalField(
+        max_digits=12, decimal_places=2, validators=[MinValueValidator(0)]
+    )  # quantity * price
 
     def save(self, *args, **kwargs):
         self.subtotal = self.quantity * self.price
         super().save(*args, **kwargs)
 
+        # 🔹 Reduce stock if sale is finalized (not just draft)
+        if self.sale and self.sale.id:  # ensure parent sale exists
+            if self.product and not self.product.is_service:
+                # Record stock movement
+                StockMovement.objects.create(
+                    product=self.product,
+                    variant=None,  # extend later if using variants
+                    movement_type="out",
+                    quantity=self.quantity,
+                    reference=f"Sale:{self.sale.id}",
+                )
+
+                # Reduce product stock
+                self.product.stock = max(0, self.product.stock - self.quantity)
+                self.product.save()
+
     def __str__(self):
-        return f"{self.product.name} x {self.quantity}"
+        return f"{self.product.name if self.product else 'N/A'} x {self.quantity}"
 
 
-class Invoice(GenericModel):
-    sale = OneToOneField(Sale, on_delete=CASCADE, related_name="invoice")
-    invoice_number = CharField(max_length=50, unique=True)
-    issued_on = DateTimeField(auto_now_add=True)
-    due_date = DateTimeField(null=True, blank=True)
-    status = CharField(
-        max_length=20,
-        choices=[
-            ("paid", "Paid"),
-            ("unpaid", "Unpaid"),
-            ("partially_paid", "Partially Paid"),
-        ],
-        default="paid",
-    )
-
-
-class Payment(GenericModel):
+class SalesPayment(GenericModel):
     sale = ForeignKey(Sale, on_delete=CASCADE, related_name="payments")
-    amount = DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
+    amount = DecimalField(
+        max_digits=12, decimal_places=2, validators=[MinValueValidator(0)]
+    )
     method = CharField(
         max_length=50,
         choices=[("cash", "Cash"), ("card", "Card"), ("online", "Online Payment")],
@@ -128,25 +135,31 @@ class Payment(GenericModel):
 class Discount(GenericModel):
     sale = ForeignKey(Sale, on_delete=CASCADE, related_name="discounts")
     description = CharField(max_length=100)
-    amount = DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
+    amount = DecimalField(
+        max_digits=12, decimal_places=2, validators=[MinValueValidator(0)]
+    )
 
 
 class Tax(GenericModel):
     sale = ForeignKey(Sale, on_delete=CASCADE, related_name="taxes")
     name = CharField(max_length=50)
     rate = DecimalField(max_digits=5, decimal_places=2)  # %
-    amount = DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
+    amount = DecimalField(
+        max_digits=12, decimal_places=2, validators=[MinValueValidator(0)]
+    )
 
 
 class SaleReturn(GenericModel):
     sale_item = ForeignKey(SaleItem, on_delete=CASCADE, related_name="returns")
     quantity = IntegerField()
     reason = TextField(blank=True, null=True)
-    refunded_amount = DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
+    refunded_amount = DecimalField(
+        max_digits=12, decimal_places=2, validators=[MinValueValidator(0)]
+    )
 
 
 class Account(GenericModel):
-    business = ForeignKey("Business", on_delete=CASCADE, related_name="accounts")
+    business = ForeignKey("business.Business", on_delete=CASCADE, related_name="accounts")
     name = CharField(max_length=100)
     code = CharField(max_length=20, unique=True)  # e.g., 1001 = Cash
     type = CharField(
@@ -165,7 +178,7 @@ class Account(GenericModel):
 
 
 class JournalEntry(GenericModel):
-    business = ForeignKey("Business", on_delete=CASCADE, related_name="journal_entries")
+    business = ForeignKey("business.Business", on_delete=CASCADE, related_name="journal_entries")
     date = DateTimeField(auto_now_add=True)
     description = CharField(max_length=255, blank=True, null=True)
     reference = CharField(
@@ -179,17 +192,23 @@ class JournalEntry(GenericModel):
 class LedgerEntry(GenericModel):
     journal_entry = ForeignKey(JournalEntry, on_delete=CASCADE, related_name="entries")
     account = ForeignKey(Account, on_delete=CASCADE, related_name="entries")
-    debit = DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
-    credit = DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
+    debit = DecimalField(
+        max_digits=12, decimal_places=2, validators=[MinValueValidator(0)]
+    )
+    credit = DecimalField(
+        max_digits=12, decimal_places=2, validators=[MinValueValidator(0)]
+    )
 
     def __str__(self):
         return f"{self.account.name} | Debit: {self.debit} | Credit: {self.credit}"
 
 
 class Purchase(GenericModel):
-    business = ForeignKey("Business", on_delete=CASCADE, related_name="purchases")
+    business = ForeignKey("business.Business", on_delete=CASCADE, related_name="purchases")
     purchase_date = DateTimeField(auto_now_add=True)
-    total_amount = DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
+    total_amount = DecimalField(
+        max_digits=12, decimal_places=2, validators=[MinValueValidator(0)]
+    )
     description = CharField(max_length=255, blank=True, null=True)
     payment_method = CharField(
         max_length=50,
@@ -235,10 +254,12 @@ class Purchase(GenericModel):
 
 
 class Expense(GenericModel):
-    business = ForeignKey("Business", on_delete=CASCADE, related_name="expenses")
+    business = ForeignKey("business.Business", on_delete=CASCADE, related_name="expenses")
     expense_date = DateTimeField(auto_now_add=True)
     description = CharField(max_length=255)
-    amount = DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
+    amount = DecimalField(
+        max_digits=12, decimal_places=2, validators=[MinValueValidator(0)]
+    )
     category = CharField(
         max_length=50,
         choices=[
@@ -269,35 +290,112 @@ class Expense(GenericModel):
 
                 # Debit: Expense Account (5002)
                 try:
-                    debit_account = Account.objects.get(business=self.business, code="5002")
+                    debit_account = Account.objects.get(
+                        business=self.business, code="5002"
+                    )
                 except ObjectDoesNotExist:
-                    raise ValueError("Expense account (5002) not configured for this business.")
+                    raise ValueError(
+                        "Expense account (5002) not configured for this business."
+                    )
                 except MultipleObjectsReturned:
-                    raise ValueError("Multiple expense accounts (5002) found for this business.")
+                    raise ValueError(
+                        "Multiple expense accounts (5002) found for this business."
+                    )
 
                 # Credit: Cash/Bank/Other
                 try:
                     if self.payment_method == "cash":
-                        credit_account = Account.objects.get(business=self.business, code="1001")
+                        credit_account = Account.objects.get(
+                            business=self.business, code="1001"
+                        )
                     elif self.payment_method == "card":
-                        credit_account = Account.objects.get(business=self.business, code="1002")
+                        credit_account = Account.objects.get(
+                            business=self.business, code="1002"
+                        )
                     else:
-                        credit_account = Account.objects.get(business=self.business, code="1003")
+                        credit_account = Account.objects.get(
+                            business=self.business, code="1003"
+                        )
                 except ObjectDoesNotExist:
-                    raise ValueError(f"Payment method account not configured for {self.payment_method}.")
+                    raise ValueError(
+                        f"Payment method account not configured for {self.payment_method}."
+                    )
                 except MultipleObjectsReturned:
-                    raise ValueError(f"Multiple accounts found for {self.payment_method} payments.")
+                    raise ValueError(
+                        f"Multiple accounts found for {self.payment_method} payments."
+                    )
 
                 # Double-entry postings
                 LedgerEntry.objects.create(
-                    journal_entry=journal, account=debit_account, debit=self.amount, credit=0
+                    journal_entry=journal,
+                    account=debit_account,
+                    debit=self.amount,
+                    credit=0,
                 )
                 LedgerEntry.objects.create(
-                    journal_entry=journal, account=credit_account, debit=0, credit=self.amount
+                    journal_entry=journal,
+                    account=credit_account,
+                    debit=0,
+                    credit=self.amount,
                 )
 
                 return journal
 
         except Exception as e:
             # Log error or re-raise
-            raise RuntimeError(f"Failed to create journal entry for expense {self.id}: {e}")
+            raise RuntimeError(
+                f"Failed to create journal entry for expense {self.id}: {e}"
+            )
+
+
+class StockMovement(GenericModel):
+    product = ForeignKey("products.Product", on_delete=CASCADE, related_name="stock_movements")
+    variant = ForeignKey(
+        "products.ProductVariant",
+        on_delete=CASCADE,
+        related_name="stock_movements",
+        null=True,
+        blank=True,
+    )
+    movement_type = CharField(
+        max_length=20,
+        choices=[("in", "In"), ("out", "Out")],
+    )
+    quantity = PositiveIntegerField()
+    reference = CharField(
+        max_length=255, blank=True, null=True
+    )  # e.g. order ID, invoice no.
+
+    def __str__(self):
+        return f"{self.movement_type.upper()} {self.quantity} - {self.product.name}"
+
+
+class PurchaseItem(GenericModel):
+    purchase = ForeignKey("Purchase", on_delete=CASCADE, related_name="items")
+    product = ForeignKey(
+        Product,
+        on_delete=SET_NULL,
+        null=True,
+        blank=True,
+        related_name="purchase_items",
+    )
+    quantity = PositiveIntegerField(default=1)
+    cost_price = DecimalField(max_digits=12, decimal_places=2)
+    subtotal = DecimalField(max_digits=12, decimal_places=2)
+
+    def save(self, *args, **kwargs):
+        self.subtotal = self.quantity * self.cost_price
+        super().save(*args, **kwargs)
+
+        if self.product and not self.product.is_service:
+            StockMovement.objects.create(
+                product=self.product,
+                variant=None,
+                movement_type="in",
+                quantity=self.quantity,
+                reference=f"Purchase:{self.purchase.id}",
+            )
+
+            # Increase stock
+            self.product.stock += self.quantity
+            self.product.save()

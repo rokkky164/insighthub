@@ -11,12 +11,14 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("business", "0001_initial"),
+        ("products", "0001_initial"),
+        ("sales", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name="Party",
+            name="Invoice",
             fields=[
                 (
                     "id",
@@ -29,46 +31,36 @@ class Migration(migrations.Migration):
                 ),
                 ("created_on", models.DateTimeField(auto_now_add=True)),
                 ("updated_on", models.DateTimeField(auto_now=True)),
-                ("name", models.CharField(max_length=255)),
-                ("email", models.EmailField(blank=True, max_length=254, null=True)),
-                ("phone", models.CharField(blank=True, max_length=20, null=True)),
+                ("invoice_number", models.CharField(max_length=50, unique=True)),
+                ("issue_date", models.DateField(auto_now_add=True)),
+                ("due_date", models.DateField(blank=True, null=True)),
                 (
-                    "secondary_phone",
-                    models.CharField(blank=True, max_length=20, null=True),
+                    "total_amount",
+                    models.DecimalField(decimal_places=2, default=0, max_digits=12),
                 ),
-                ("date_of_birth", models.DateField(blank=True, null=True)),
                 (
-                    "gender",
+                    "tax_amount",
+                    models.DecimalField(decimal_places=2, default=0, max_digits=12),
+                ),
+                (
+                    "status",
                     models.CharField(
-                        blank=True,
                         choices=[
-                            ("male", "Male"),
-                            ("female", "Female"),
-                            ("other", "Other"),
+                            ("draft", "Draft"),
+                            ("pending", "Pending"),
+                            ("paid", "Paid"),
+                            ("overdue", "Overdue"),
                         ],
+                        default="draft",
                         max_length=20,
-                        null=True,
                     ),
                 ),
-                ("address", models.TextField(blank=True, null=True)),
-                ("city", models.CharField(blank=True, max_length=100, null=True)),
-                ("state", models.CharField(blank=True, max_length=100, null=True)),
-                ("country", models.CharField(blank=True, max_length=100, null=True)),
-                ("postal_code", models.CharField(blank=True, max_length=20, null=True)),
                 ("is_active", models.BooleanField(default=True)),
-                (
-                    "loyalty_points",
-                    models.CharField(blank=True, max_length=20, null=True),
-                ),
-                ("joined_on", models.DateTimeField(auto_now_add=True)),
-                ("last_purchase_on", models.DateTimeField(blank=True, null=True)),
-                ("is_customer", models.BooleanField(default=False)),
-                ("is_supplier", models.BooleanField(default=False)),
                 (
                     "business",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="parties",
+                        related_name="invoices",
                         to="business.business",
                     ),
                 ),
@@ -83,6 +75,26 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
+                    "purchase",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="invoices",
+                        to="sales.purchase",
+                    ),
+                ),
+                (
+                    "sale",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="invoices",
+                        to="sales.sale",
+                    ),
+                ),
+                (
                     "updated_by",
                     models.ForeignKey(
                         blank=True,
@@ -98,41 +110,7 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name="Supplier",
-            fields=[
-                (
-                    "party_ptr",
-                    models.OneToOneField(
-                        auto_created=True,
-                        on_delete=django.db.models.deletion.CASCADE,
-                        parent_link=True,
-                        primary_key=True,
-                        serialize=False,
-                        to="customers.party",
-                    ),
-                ),
-                (
-                    "account_balance",
-                    models.DecimalField(decimal_places=2, default=0, max_digits=12),
-                ),
-            ],
-            options={
-                "abstract": False,
-            },
-            bases=("customers.party",),
-        ),
-        migrations.CreateModel(
-            name="Customer",
-            fields=[],
-            options={
-                "proxy": True,
-                "indexes": [],
-                "constraints": [],
-            },
-            bases=("customers.party",),
-        ),
-        migrations.CreateModel(
-            name="CustomerNote",
+            name="BillingPayment",
             fields=[
                 (
                     "id",
@@ -145,70 +123,20 @@ class Migration(migrations.Migration):
                 ),
                 ("created_on", models.DateTimeField(auto_now_add=True)),
                 ("updated_on", models.DateTimeField(auto_now=True)),
-                ("note", models.TextField()),
-                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("amount", models.DecimalField(decimal_places=2, max_digits=12)),
+                ("payment_date", models.DateTimeField(auto_now_add=True)),
                 (
-                    "created_by",
-                    models.ForeignKey(
-                        blank=True,
-                        null=True,
-                        on_delete=django.db.models.deletion.SET_NULL,
-                        related_name="%(class)s_created",
-                        to=settings.AUTH_USER_MODEL,
-                    ),
-                ),
-                (
-                    "updated_by",
-                    models.ForeignKey(
-                        blank=True,
-                        null=True,
-                        on_delete=django.db.models.deletion.SET_NULL,
-                        related_name="%(class)s_updated",
-                        to=settings.AUTH_USER_MODEL,
-                    ),
-                ),
-                (
-                    "customer",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        related_name="notes",
-                        to="customers.customer",
-                    ),
-                ),
-            ],
-            options={
-                "abstract": False,
-            },
-        ),
-        migrations.CreateModel(
-            name="CustomerInteraction",
-            fields=[
-                (
-                    "id",
-                    models.BigAutoField(
-                        auto_created=True,
-                        primary_key=True,
-                        serialize=False,
-                        verbose_name="ID",
-                    ),
-                ),
-                ("created_on", models.DateTimeField(auto_now_add=True)),
-                ("updated_on", models.DateTimeField(auto_now=True)),
-                (
-                    "interaction_type",
+                    "payment_method",
                     models.CharField(
                         choices=[
-                            ("CALL", "Call"),
-                            ("EMAIL", "Email"),
-                            ("MEETING", "Meeting"),
-                            ("OTHER", "Other"),
+                            ("cash", "Cash"),
+                            ("card", "Card"),
+                            ("online", "Online Payment"),
                         ],
-                        default="OTHER",
-                        max_length=20,
+                        max_length=50,
                     ),
                 ),
-                ("description", models.TextField(blank=True, null=True)),
-                ("date", models.DateTimeField(auto_now_add=True)),
+                ("is_confirmed", models.BooleanField(default=True)),
                 (
                     "created_by",
                     models.ForeignKey(
@@ -230,11 +158,81 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "customer",
+                    "invoice",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="interactions",
-                        to="customers.customer",
+                        related_name="payments",
+                        to="billing.invoice",
+                    ),
+                ),
+            ],
+            options={
+                "abstract": False,
+            },
+        ),
+        migrations.CreateModel(
+            name="InvoiceItem",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_on", models.DateTimeField(auto_now_add=True)),
+                ("updated_on", models.DateTimeField(auto_now=True)),
+                ("quantity", models.PositiveIntegerField(default=1)),
+                ("price", models.DecimalField(decimal_places=2, max_digits=12)),
+                (
+                    "tax_rate",
+                    models.DecimalField(decimal_places=2, default=0, max_digits=5),
+                ),
+                (
+                    "subtotal",
+                    models.DecimalField(decimal_places=2, default=0, max_digits=12),
+                ),
+                (
+                    "tax_amount",
+                    models.DecimalField(decimal_places=2, default=0, max_digits=12),
+                ),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="%(class)s_created",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "invoice",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="items",
+                        to="billing.invoice",
+                    ),
+                ),
+                (
+                    "product",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="products.product",
+                    ),
+                ),
+                (
+                    "updated_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="%(class)s_updated",
+                        to=settings.AUTH_USER_MODEL,
                     ),
                 ),
             ],
