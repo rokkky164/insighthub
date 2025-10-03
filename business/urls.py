@@ -1,7 +1,13 @@
 # urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import DepartmentViewSet, BusinessSettingsViewSet, PaymentMethodViewSet, BusinessViewSet, UserBusinessViewSet
+from .views import (
+    DepartmentViewSet,
+    BusinessSettingsViewSet,
+    PaymentMethodViewSet,
+    BusinessViewSet,
+    UserBusinessViewSet,
+)
 
 router = DefaultRouter()
 router.register(r"departments", DepartmentViewSet, basename="department")

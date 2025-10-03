@@ -45,14 +45,11 @@ class ProductSerializer(ModelSerializer):
         category = None
         if category_name:
             category, _ = ProductCategory.objects.get_or_create(
-                business=business,
-                name=category_name
+                business=business, name=category_name
             )
 
         # Create product
         product = Product.objects.create(
-            business=business,
-            category=category,
-            **validated_data
+            business=business, category=category, **validated_data
         )
         return product

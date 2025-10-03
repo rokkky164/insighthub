@@ -22,7 +22,14 @@ class SignupSerializer(ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "first_name", "last_name", "email",  "password", "confirm_password"]
+        fields = [
+            "id",
+            "first_name",
+            "last_name",
+            "email",
+            "password",
+            "confirm_password",
+        ]
 
     def validate(self, data):
         if data["password"] != data["confirm_password"]:
@@ -30,7 +37,9 @@ class SignupSerializer(ModelSerializer):
         return data
 
     def create(self, validated_data):
-        validated_data["username"] = generate_username(validated_data["first_name"], validated_data["last_name"])
+        validated_data["username"] = generate_username(
+            validated_data["first_name"], validated_data["last_name"]
+        )
         validated_data.pop("confirm_password")
         user = User.objects.create_user(**validated_data)
         return user
@@ -49,7 +58,9 @@ class AuthenticateSerializer(Serializer):
         if auth_type == AuthenticateType.login_with_otp.value:
             return self.validate_for_login_with_otp(attrs)
         if auth_type == AuthenticateType.login_with_password.value:
-            return self.manager.validate_and_login_with_email(email=attrs["email"], password=attrs["password"])
+            return self.manager.validate_and_login_with_email(
+                email=attrs["email"], password=attrs["password"]
+            )
 
 
 class UserSerializer(ModelSerializer):

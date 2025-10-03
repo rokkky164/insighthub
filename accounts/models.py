@@ -1,8 +1,5 @@
 from django.contrib.auth.models import AbstractUser
-from django.db.models import (
-    TextChoices,
-    CharField
-)
+from django.db.models import TextChoices, CharField
 
 
 class User(AbstractUser):

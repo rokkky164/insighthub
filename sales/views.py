@@ -18,9 +18,8 @@ class SaleViewSet(viewsets.ModelViewSet):
         .prefetch_related("items__product")
     )
     serializer_class = SaleSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsStaffUser]
     filterset_class = SaleFilter
-    permission_classes = [IsStaffUser]
 
     @action(detail=True, methods=["post"])
     def return_item(self, request, pk=None):

@@ -22,7 +22,9 @@ class UserManager(BaseModelManager):
         self.otp = kwargs.get("otp")
         self.serializer = kwargs.get("serializer")
         self.user_object = kwargs.get("user_object")
-        self.user_id = str(self.user_object.id) if self.user_object is not None else None
+        self.user_id = (
+            str(self.user_object.id) if self.user_object is not None else None
+        )
         self.user_id = (
             self.user_id if self.user_id is not None else kwargs.get("user_id")
         )

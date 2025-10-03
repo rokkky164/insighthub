@@ -10,7 +10,8 @@ from .serializers import (
     DepartmentSerializer,
     BusinessSettingsSerializer,
     PaymentMethodSerializer,
-    BusinessSerializer, UserBusinessSerializer
+    BusinessSerializer,
+    UserBusinessSerializer,
 )
 from business.filters import BusinessFilter, UserBusinessFilter
 from accounts.permissions import IsBusinessUser

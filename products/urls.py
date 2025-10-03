@@ -9,7 +9,7 @@ from .views import (
     ProductCategoryViewSet,
     ProductCSVUploadView,
     download_csv_template,
-    export_csv
+    export_csv,
 )
 
 router = DefaultRouter()
@@ -28,7 +28,7 @@ urlpatterns = [
         download_csv_template,
         name="download-products-csv-template",
     ),
-    path("api/products/export-csv/", export_csv, name="export_csv")
+    path("api/products/export-csv/", export_csv, name="export_csv"),
 ]
 
 if settings.DEBUG:

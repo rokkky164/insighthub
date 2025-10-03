@@ -1,20 +1,16 @@
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import generics, status, viewsets
 from rest_framework.response import Response
+
 # App Imports
 from common.exception import InsightHubException
 from common.pagination import StandardResultsSetPagination
 from common.errors import ERROR_DETAILS
 from accounts.models import User
-from .serializers import (
-    UserSerializer,
-    AuthenticateSerializer,
-    SignupSerializer
-)
+from .serializers import UserSerializer, AuthenticateSerializer, SignupSerializer
 from .filters import UserFilter
 from .constants import (
     AuthenticateType,
-
 )
 
 
@@ -35,7 +31,7 @@ class SignupViewSet(viewsets.GenericViewSet):
                     "username": user.username,
                     "email": user.email,
                     "first_name": user.first_name,
-                    "last_name": user.last_name
+                    "last_name": user.last_name,
                 },
                 status=status.HTTP_201_CREATED,
             )

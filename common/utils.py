@@ -7,7 +7,7 @@ from accounts.models import User
 def generate_username(first_name, last_name):
     first = first_name.lower()
     last = last_name.lower()
-    
+
     base_username_options = [
         f"{first}{last}",
         f"{first}.{last}",
@@ -16,7 +16,7 @@ def generate_username(first_name, last_name):
         f"{last}{random.randint(10, 99)}",
         f"{first}{random.randint(100, 999)}",
     ]
-    
+
     for base_username in base_username_options:
         username = base_username
         if not User.objects.filter(username=username).exists():

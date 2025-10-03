@@ -1,6 +1,6 @@
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-from .models import SaleItem, Product
+from .models import SaleItem, Sale, Purchase, Expense
 
 
 @receiver(post_save, sender=SaleItem)
@@ -36,3 +36,27 @@ def restore_product_stock_on_delete(sender, instance, **kwargs):
 
     product.stock += instance.quantity
     product.save()
+
+
+@receiver(post_save, sender=Sale)
+def create_sale_journal_entry(sender, instance, created, **kwargs):
+    if created:
+        instance.create_journal_entry()
+
+
+@receiver(post_save, sender=Sale)
+def create_sale_entry(sender, instance, created, **kwargs):
+    if created:
+        instance.create_journal_entry()
+
+
+@receiver(post_save, sender=Purchase)
+def create_purchase_entry(sender, instance, created, **kwargs):
+    if created:
+        instance.create_journal_entry()
+
+
+@receiver(post_save, sender=Expense)
+def create_expense_entry(sender, instance, created, **kwargs):
+    if created:
+        instance.create_journal_entry()

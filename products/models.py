@@ -8,7 +8,7 @@ from django.db.models import (
     DecimalField,
     IntegerField,
     BooleanField,
-    URLField
+    URLField,
 )
 from django.db.models import Manager
 from django.conf import settings
