@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django_filters",
     "drf_api_logger",
+    "django_extensions",
     # apps
     "accounts",
     "billing",
